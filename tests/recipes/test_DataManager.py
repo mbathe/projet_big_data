@@ -50,6 +50,41 @@ def data_manager_fixture():
         yield data_manager, mock_recipe, mock_recipe_instance
 
 
+
+def test_set_date_range_exception(data_manager_fixture):
+    data_manager, _, _ = data_manager_fixture
+    with patch('src.pages.recipes.Analyse_recipes.Recipe', side_effect=Exception("Invalid date range")):
+        with patch('logging.error') as mock_logging_error:
+            data_manager.set_date_range('2020-01-01', '2020-12-31')
+            mock_logging_error.assert_called_once_with("Failed to set date range: Invalid date range")
+
+def test_analyze_temporal_distribution_exception(data_manager_fixture):
+    data_manager, _, mock_recipe_instance = data_manager_fixture
+    mock_recipe_instance.analyze_temporal_distribution.side_effect = Exception("Analysis error")
+    with patch('logging.error') as mock_logging_error:
+        result = data_manager.analyze_temporal_distribution('2020-01-01', '2020-12-31')
+        mock_logging_error.assert_called_once_with("Failed to analyze temporal distribution: Analysis error")
+        assert result is None
+
+def test_analyze_recipe_complexity_exception(data_manager_fixture):
+    data_manager, _, mock_recipe_instance = data_manager_fixture
+    mock_recipe_instance.analyze_recipe_complexity.side_effect = Exception("Complexity error")
+    with patch('logging.error') as mock_logging_error:
+        result = data_manager.analyze_recipe_complexity()
+        mock_logging_error.assert_called_once_with("Failed to analyze recipe complexity: Complexity error")
+        assert result is None
+
+def test_analyze_nutrition_exception(data_manager_fixture):
+    data_manager, _, mock_recipe_instance = data_manager_fixture
+    mock_recipe_instance.analyze_nutrition.side_effect = Exception("Nutrition error")
+    with patch('logging.error') as mock_logging_error:
+        result = data_manager.analyze_nutrition()
+        mock_logging_error.assert_called_once_with("Failed to analyze nutrition: Nutrition error")
+        assert result is None
+
+
+
+
 def test_set_date_range(data_manager_fixture):
     data_manager, mock_recipe, mock_recipe_instance = data_manager_fixture
     
@@ -62,7 +97,6 @@ def test_set_date_range(data_manager_fixture):
     # Vérifiez que l'instance de Recipe dans DataManager a été mise à jour
     assert data_manager.recipe == mock_recipe_instance
 
-
 def test_get_recipe_data(data_manager_fixture):
     data_manager, mock_recipe, mock_recipe_instance = data_manager_fixture
     
@@ -71,7 +105,6 @@ def test_get_recipe_data(data_manager_fixture):
     
     # Vérifiez que la méthode retourne bien l'instance mockée de Recipe
     assert result == mock_recipe_instance
-
 
 def test_export_data_csv(data_manager_fixture):
     data_manager, mock_recipe, mock_recipe_instance = data_manager_fixture
@@ -202,19 +235,24 @@ def test_analyze_tags_old(data_manager_fixture):
 
 def test_export_data_csv_failure(data_manager_fixture):
     data_manager, mock_recipe, mock_recipe_instance = data_manager_fixture
-    
-    # Simuler une exception lors de l'appel à to_csv
+
+    # Simulate an exception when calling to_csv
     mock_recipe_instance.st.session_state.data.to_csv.side_effect = Exception("CSV export failed")
-    
-    # Capturer les logs pour vérifier l'erreur
+
+    # Capture the logs
     with patch('logging.error') as mock_logging_error:
         result = data_manager.export_data("CSV")
-        
-        # Vérifiez que to_csv a été appelé avec les bons arguments
+
+        # Verify that to_csv was called
         mock_recipe_instance.st.session_state.data.to_csv.assert_called_once_with(index=False)
-        
-        # Vérifiez que logging.error a été appelé avec le bon message
+
+        # Verify that logging.error was called
         mock_logging_error.assert_called_once_with("Failed to export data: CSV export failed")
-        
-        # Vérifiez que le résultat est None en cas d'erreur
+
+        # Verify that the result is None
         assert result is None
+
+
+
+
+

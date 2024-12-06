@@ -13,3 +13,4 @@ def test_load_css_failure():
         with pytest.raises(Exception) as excinfo:
             CSSLoader.load("src/css_pages/recipe.css")
         assert str(excinfo.value) == "Failed to load CSS: CSS load error"
+
